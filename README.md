@@ -192,3 +192,11 @@ Queda pendiente validar la detección con tickets reales de cada idioma y comple
 `npm run build` genera únicamente el frontend. Para publicar la aplicación también necesitas alojar el backend y configurar el enrutamiento de `/api`; el proxy local de Vite no configura las rutas del hosting. Define las variables del servidor y el origen del frontend en el entorno de despliegue.
 
 Este repositorio no incluye todavía una configuración de despliegue específica para un proveedor.
+
+### Vista previa al compartir enlaces
+
+`index.html` incluye metadatos Open Graph y Twitter Card, junto con una imagen de presentación de TicketNova en `public/social-preview.jpg` (1200 × 630). También se incluyen iconos PNG para navegadores y dispositivos Apple. Estos datos están en el HTML inicial para que las aplicaciones de mensajería puedan leerlos sin ejecutar React.
+
+Las URLs de los metadatos apuntan a `https://ticketnova-lyart.vercel.app/`. Si cambia el dominio, actualiza el enlace canónico, `og:url`, `og:image` y `twitter:image` en `index.html`, y el dominio dibujado en la imagen. Los recursos gráficos se pueden regenerar en macOS con `swift scripts/generate-social-assets.swift`; no hace falta Swift para compilar ni desplegar la web.
+
+Las aplicaciones de mensajería deciden cómo mostrar la tarjeta y pueden conservar versiones anteriores en caché. La tarjeta identifica el proyecto; no es una certificación de seguridad.
