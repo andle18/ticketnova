@@ -1,0 +1,1 @@
+App React y Express que analiza tickets de supermercado con IA, ofrece clasificación NOVA orientativa y recomendaciones de compra, con cinco idiomas e historial local por perfil.
