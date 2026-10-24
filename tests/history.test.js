@@ -57,6 +57,18 @@ test('history retains the output language, detected ticket language and original
   assert.equal(restored.products[0].originalName, 'МОЛОКО');
 });
 
+test('history preserves Argentine and Polish currencies when reopening receipts', t => {
+  storage(t);
+  const profile = createProfile();
+  for (const [countryCode, currency, expected] of [['AR', '$', 'ARS'], ['PL', 'zł', 'PLN']]) {
+    assert.equal(saveAnalysis(profile, { ...analysis(), countryCode, currency, total: 1234.56 }), true);
+    const restored = getHistory(profile.id)[0].analysis;
+    assert.equal(restored.countryCode, countryCode);
+    assert.equal(restored.currency, expected);
+    assert.equal(restored.total, 1234.56);
+  }
+});
+
 test('history is opt-in; disabling it retains old entries but prevents saving new ones', t => {
   storage(t);
   saveProfile({ name: 'Ana' });

@@ -31,3 +31,12 @@ test('complete receipt-based lists get a calculated total', () => {
   });
   assert.equal(result.nextWeek.estimatedTotal, 0.3);
 });
+
+test('shopping totals preserve three-decimal currencies', () => {
+  const result = useReceiptPrices({
+    currency: 'KWD',
+    products: [{ name: 'A', price: 1.234 }, { name: 'B', price: 0.111 }], topEliminate: [],
+    nextWeek: { keep: [{ name: 'A' }, { name: 'B' }], add: [] },
+  });
+  assert.equal(result.nextWeek.estimatedTotal, 1.345);
+});

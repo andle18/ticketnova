@@ -1,5 +1,6 @@
 import { getProfile } from './profile.js';
 import { supportedLanguage } from '../i18n/languages.js';
+import { receiptCurrency } from './currency.js';
 
 const PREFIX = 'ticket-analyzer:history:';
 export const HISTORY_LIMIT = 20;
@@ -25,7 +26,8 @@ function analysisData(data) {
     language: supportedLanguage(data.language),
     detectedLanguage: supportedLanguage(data.detectedLanguage, 'und'),
     store: text(data.store), location: text(data.location), date: text(data.date),
-    currency: text(data.currency) || '€', total: number(data.total), summary,
+    countryCode: /^[A-Z]{2}$/.test(text(data.countryCode)) ? data.countryCode : '',
+    currency: receiptCurrency(data.currency, data.countryCode), total: number(data.total), summary,
     products: list(data.products).map(item => ({
       name: text(item.name), originalName: text(item.originalName || item.name), price: number(item.price),
       quantity: typeof item.quantity === 'number' ? String(item.quantity) : text(item.quantity),

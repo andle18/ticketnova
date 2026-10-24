@@ -23,6 +23,14 @@ Si el perfil ya está completo y guardado, en la siguiente visita se pasa direct
 - **Cinco idiomas:** español, inglés, polaco, ruso y bielorruso, con detección automática del idioma del ticket y selección manual.
 - **Lista descargable:** exportación en `.txt` con los productos y los precios conocidos del ticket.
 
+### Moneda del ticket
+
+El análisis detecta el país y la moneda a partir de los datos impresos: por ejemplo, un ticket argentino en pesos usa `ARS` y uno polaco en eslotis usa `PLN`. Una moneda indicada explícitamente tiene prioridad sobre la habitual del país. El símbolo `$` por sí solo no se interpreta como dólar estadounidense.
+
+Se aceptan monedas ISO 4217 de cualquier país. Para resolver símbolos compartidos se incluye una tabla de Unicode CLDR de 255 países y territorios (`src/lib/currencyRegions.js`, instantánea del 24 de octubre de 2026). Los símbolos ambiguos solo se asignan cuando coinciden con una única moneda del país detectado. La presentación y los totales respetan el número de decimales de la moneda, incluidos yenes y dinares kuwaitíes. La detección visual depende de que los datos del ticket sean legibles.
+
+Todos los precios, métricas, historial y lista descargable conservan la moneda y los importes originales. Cambiar el idioma solo modifica la presentación; no convierte divisas. Si no se puede identificar la moneda, se conserva el símbolo disponible sin asignar euros ni dólares por defecto.
+
 ### Idiomas
 
 El modo **Automático · ticket** detecta el idioma del texto durante el análisis. La interfaz, los nombres de alimentos, las recomendaciones y la lista descargable cambian a ese idioma. Un ticket de Bielorrusia escrito en ruso se analiza en ruso: la detección no se basa únicamente en el país.

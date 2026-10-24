@@ -4,6 +4,8 @@ import dotenv from "dotenv";
 import rateLimit from "express-rate-limit";
 import Anthropic from "@anthropic-ai/sdk";
 import { pathToFileURL } from "node:url";
+import { receiptCurrency } from "./src/lib/currency.js";
+import { toNumber } from "./server/numbers.js";
 import { useReceiptPrices } from "./server/receiptPrices.js";
 import { languageInstruction, resolveAnalysisLanguage, translateStrings, validTranslationInput } from "./server/language.js";
 
@@ -41,6 +43,23 @@ PROCESO EN DOS FASES:
 FASE 1 — LECTURA DEL TICKET:
 Lee la imagen del ticket y extrae los productos y precios EXACTOS tal como aparecen.
 Identifica el supermercado y la moneda.
+Detecta el país del ticket a partir de la dirección, datos fiscales y texto impreso.
+Devuelve countryCode como código ISO de país de dos letras (AR, PL, ES, US, etc.) o "" si no hay evidencia suficiente.
+Devuelve currency como código ISO 4217 de la moneda de los importes del ticket: ARS para pesos argentinos,
+PLN para eslotis polacos, EUR para euros, USD para dólares estadounidenses, etc.
+Acepta tickets de CUALQUIER país o territorio, de todos los continentes, y cualquier moneda ISO 4217;
+los ejemplos anteriores no limitan los países ni las monedas compatibles.
+Por ejemplo: JPY (Japón), CNY (China), KRW (Corea del Sur), INR (India), BRL (Brasil),
+ZAR (Sudáfrica), NGN (Nigeria), MAD (Marruecos), AUD (Australia), NZD (Nueva Zelanda),
+CHF (Suiza), NOK (Noruega), AED (Emiratos Árabes Unidos), KWD (Kuwait), etc.
+Conserva la precisión original de cada moneda: algunas no usan decimales y otras usan tres.
+El símbolo $ NO significa automáticamente USD: en un ticket argentino con precios en pesos usa ARS.
+Si el ticket indica explícitamente otra moneda, respétala incluso si no es la moneda habitual del país.
+No deduzcas la moneda solo por el idioma del ticket, el idioma elegido o la ubicación del usuario.
+Si solo aparece un símbolo ambiguo y no hay país identificable, conserva ese símbolo; si no hay moneda detectable, devuelve "".
+Mantén todos los importes en su moneda original, sin convertirlos ni aplicar tipos de cambio.
+Lee correctamente separadores locales (Argentina 1.234,56 y Polonia 1 234,56 equivalen al número JSON 1234.56).
+Devuelve los precios como números JSON sin separadores de miles, con punto decimal.
 
 FASE 2 — RECOMENDACIONES SIN INVENTAR PRECIOS:
 Recomienda alternativas y productos para la próxima compra sin atribuirles precios ni tiendas.
@@ -59,7 +78,8 @@ Devuelve EXCLUSIVAMENTE un objeto JSON válido (sin markdown, sin \`\`\`, sin te
   "store": "nombre del supermercado del ticket",
   "location": "ciudad/zona si es legible",
   "date": "fecha del ticket",
-  "currency": "símbolo: €, £, $",
+  "countryCode": "AR|PL|ES|US|otro código ISO de país o cadena vacía",
+  "currency": "código ISO 4217: ARS, PLN, EUR, USD, etc.; símbolo si es ambiguo o cadena vacía si no se detecta",
   "total": 48.54,
   "products": [
     {
@@ -163,15 +183,6 @@ function validateImagePayload(imageBase64, mediaType) {
 // so numbers can arrive as strings (e.g. Spanish "1,69" decimals) or fields
 // can be missing outright. Normalize everything the frontend renders with
 // .toFixed()/.map() so a slightly-off model response can't crash the UI.
-function toNumber(value, fallback = 0) {
-  if (typeof value === "number" && Number.isFinite(value)) return value;
-  if (typeof value === "string") {
-    const n = parseFloat(value.replace(/[^0-9,.-]/g, "").replace(",", "."));
-    if (Number.isFinite(n)) return n;
-  }
-  return fallback;
-}
-
 function normalizeAnalysis(data) {
   const summary = data.summary && typeof data.summary === "object" ? data.summary : {};
   const nextWeek = data.nextWeek && typeof data.nextWeek === "object" ? data.nextWeek : {};
@@ -180,7 +191,8 @@ function normalizeAnalysis(data) {
   return {
     ...data,
     store: typeof data.store === "string" && data.store ? data.store : "",
-    currency: typeof data.currency === "string" && data.currency ? data.currency : "€",
+    countryCode: typeof data.countryCode === "string" && /^[a-z]{2}$/i.test(data.countryCode) ? data.countryCode.toUpperCase() : "",
+    currency: receiptCurrency(data.currency, data.countryCode),
     total: toNumber(data.total),
     products: Array.isArray(data.products)
       ? data.products.map((p) => ({

@@ -1,3 +1,5 @@
+import { receiptCurrency } from '../lib/currency.js';
+
 export const languages = {
   es: { name: 'Español', modelName: 'español' },
   en: { name: 'English', modelName: 'inglés' },
@@ -18,10 +20,9 @@ export function numberLabel(value, language, digits = 2) {
 }
 
 export function moneyLabel(value, currency, language) {
-  const aliases = { '€': 'EUR', '£': 'GBP', '$': 'USD', 'zł': 'PLN', '₽': 'RUB', 'Br': 'BYN' };
-  const code = aliases[currency] ?? currency;
+  const code = receiptCurrency(currency);
   if (/^[A-Z]{3}$/.test(code)) {
     return new Intl.NumberFormat(supportedLanguage(language), { style: 'currency', currency: code }).format(value);
   }
-  return `${numberLabel(value, language)} ${currency}`;
+  return `${numberLabel(value, language)}${code ? ` ${code}` : ''}`;
 }
