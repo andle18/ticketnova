@@ -122,6 +122,14 @@ Abre **http://localhost:5173**. Vite redirige las peticiones `/api` al backend e
 
 Sin `ANTHROPIC_API_KEY`, la interfaz y el endpoint de estado pueden ejecutarse, pero el análisis de imágenes y las traducciones no estarán disponibles.
 
+### Despliegue en Vercel
+
+El frontend se compila con `npm run build` y se publica desde `dist/`. Las funciones de `api/` exponen las rutas de Express para analizar, traducir y comprobar el estado; no hace falta ejecutar `npm run server` en Vercel.
+
+En **Settings → Environment Variables**, añade `ANTHROPIC_API_KEY` con tu clave de Anthropic para los entornos que uses (Production y, si corresponde, Preview). No uses el prefijo `VITE_`. Después de cambiar las variables, crea un nuevo despliegue.
+
+Comprueba `https://tu-dominio/api/health`: debe devolver `{"ok":true}`. Esto confirma que el backend responde, pero no valida la clave ni el acceso a Anthropic. Si devuelve 404, comprueba que el despliegue incluye los archivos de `api/` y `vercel.json`.
+
 ### Comandos
 
 | Comando | Función |

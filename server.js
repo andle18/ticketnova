@@ -3,6 +3,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 import rateLimit from "express-rate-limit";
 import Anthropic from "@anthropic-ai/sdk";
+import { pathToFileURL } from "node:url";
 import { useReceiptPrices } from "./server/receiptPrices.js";
 import { languageInstruction, resolveAnalysisLanguage, translateStrings, validTranslationInput } from "./server/language.js";
 
@@ -337,6 +338,10 @@ app.get("/api/health", (req, res) => {
   res.json({ ok: true });
 });
 
-app.listen(PORT, () => {
-  console.log(`✓ Backend running on http://localhost:${PORT}`);
-});
+export default app;
+
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  app.listen(PORT, () => {
+    console.log(`✓ Backend running on http://localhost:${PORT}`);
+  });
+}
