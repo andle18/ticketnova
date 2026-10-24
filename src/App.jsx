@@ -1,9 +1,8 @@
-import { useEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { Sparkles, RefreshCw, AlertCircle, Apple } from 'lucide-react';
 import UploadZone from './components/UploadZone';
 import LoadingState from './components/LoadingState';
 import MetricCards from './components/MetricCards';
-import NovaChart from './components/NovaChart';
 import ProductTable from './components/ProductTable';
 import TopEliminate from './components/TopEliminate';
 import SmartBuys from './components/SmartBuys';
@@ -19,6 +18,8 @@ import { languages, supportedLanguage } from './i18n/languages';
 import { getProfile, saveProfile, clearProfile, isProfileComplete } from './lib/profile';
 import { getHistory, saveAnalysis, deleteAnalysis, clearHistory } from './lib/history';
 import { useLang } from './context/LangContext';
+
+const NovaChart = lazy(() => import('./components/NovaChart'));
 
 export default function App() {
   const { t, lang, setLang, languagePreference, setLanguagePreference } = useLang();
@@ -350,7 +351,14 @@ export default function App() {
             />
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-              <NovaChart summary={result.summary} />
+              <Suspense fallback={
+                <div role="status" className="min-h-[232px] rounded-2xl border border-white/[0.07] bg-white/[0.03] p-5">
+                  <p className="text-sm font-medium text-white/90">{t('novaDistribution')}</p>
+                  <div aria-hidden="true" className="mx-auto mt-4 h-40 w-40 animate-pulse rounded-full bg-white/[0.06]" />
+                </div>
+              }>
+                <NovaChart summary={result.summary} />
+              </Suspense>
               <ProductTable products={result.products} currency={result.currency} />
             </div>
 
